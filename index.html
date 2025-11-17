@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Step 1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="/js/tracking.js?v=cpi"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a0b2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            max-width: 480px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 48px 40px;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .step-indicator {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+            margin-bottom: 40px;
+            letter-spacing: 0.5px;
+        }
+
+        .question {
+            font-size: 28px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 48px;
+            line-height: 1.3;
+            animation: slideUp 0.8s ease-out 0.2s both;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out both;
+        }
+
+        .option:nth-child(1) { animation-delay: 0.4s; }
+        .option:nth-child(2) { animation-delay: 0.5s; }
+
+        .option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .option:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .option:hover::before {
+            left: 100%;
+        }
+
+        .option.selected {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 18px;
+            font-weight: 500;
+            color: white;
+        }
+
+        .option-letter {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .option.selected .option-letter {
+            background: #10b981;
+            color: white;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 18px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+            pointer-events: none;
+            animation: slideUp 0.6s ease-out 0.6s both;
+        }
+
+        .submit-btn.active {
+            opacity: 1;
+            pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+
+        .submit-btn.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4);
+        }
+
+        .submit-btn.active:active {
+            transform: translateY(0);
+        }
+
+        /* Results Page Styles */
+        .results-page {
+            animation: slideInRight 0.8s ease-out;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .results-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .results-subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .results-subtitle br {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* Progress Bar */
+        .progress-section {
+            margin-bottom: 32px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            width: 35%;
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 4px;
+            position: relative;
+            animation: progressGrow 1.5s ease-out 0.5s both, progressPulse 2s ease-in-out infinite 2s;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s ease-in-out infinite;
+        }
+
+        @keyframes progressGrow {
+            from { width: 0%; }
+            to { width: 35%; }
+        }
+
+        @keyframes progressPulse {
+            0%, 100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 0 16px rgba(16, 185, 129, 0.6); }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+
+        /* CTA Button */
+        .cta-button {
+            width: 100%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 20px 24px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 32px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4);
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 15px 40px rgba(16, 185, 129, 0.5); }
+        }
+
+        /* Instructions */
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 28px 24px;
+        }
+
+        .instructions-header {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 20px;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            opacity: 0;
+            animation: fadeInLeft 0.6s ease-out forwards;
+        }
+
+        .step:nth-child(2) { animation-delay: 1s; }
+        .step:nth-child(3) { animation-delay: 1.2s; }
+        .step:nth-child(4) { animation-delay: 1.4s; }
+
+        .step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-icon {
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-right: 14px;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .step-icon::before {
+            content: '✓';
+            color: white;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 3px;
+            line-height: 1.3;
+        }
+
+        .step-desc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.65);
+            line-height: 1.4;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 560px) {
+            .quiz-container {
+                padding: 36px 24px;
+            }
+            
+            .question {
+                font-size: 24px;
+                margin-bottom: 36px;
+            }
+            
+            .option-label {
+                font-size: 16px;
+            }
+
+            #intro-section h1 {
+                font-size: 24px;
+            }
+
+            #intro-section p {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container" id="quizContainer">
+        <!-- Question Page -->
+        <div class="question-page" id="questionPage">
+            <div class="step-indicator">1 →</div>
+            
+            <h1 class="question">What Phone do you use?</h1>
+            
+            <div class="options">
+                <div class="option" data-value="iphone">
+                    <div class="option-label">
+                        <span class="option-letter">A</span>
+                        <span>iPhone</span>
+                    </div>
+                </div>
+                
+                <div class="option" data-value="android">
+                    <div class="option-label">
+                        <span class="option-letter">B</span>
+                        <span>Android</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="submit-btn" id="submitBtn">Submit</button>
+        </div>
+
+        <!-- Results Page -->
+        <div class="results-page" id="resultsPage" style="display: none;">
+            <div class="results-header">
+                <h1 class="results-title">Perfect! You're All Set!</h1>
+                <p class="results-subtitle">Make $300+/day just by Playing Games<br>Follow the instructions to start earning today!</p>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-label">
+                    <span>Reward Progress</span>
+                    <span>35%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+
+            <button class="cta-button trxbutton" id="ctaButton">START EARNING NOW</button>
+
+            <div class="instructions">
+                <div class="instructions-header">Quick Start Guide →</div>
+                
+                <div class="step">
+                    <div class="step-icon"></div>
+                    <div class="step-content">
+                        <div class="step-title">Download the app</div>
+                        <div class="step-desc">Click the button above</div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-icon"></div>
+                    <div class="step-content">
+                        <div class="step-title">Earn More by Testing Multiple Games</div>
+                        <div class="step-desc">Make over $300/day</div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-icon"></div>
+                    <div class="step-content">
+                        <div class="step-title">Pro tip: Make in-app purchases on the games to earn faster</div>
+                        <div class="step-desc">Optional but helps boost game levels and long-term earnings!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const options = document.querySelectorAll('.option');
+        const submitBtn = document.getElementById('submitBtn');
+        let selectedOption = null;
+
+        options.forEach(option => {
+            option.addEventListener('click', () => {
+                // Remove previous selection
+                options.forEach(opt => opt.classList.remove('selected'));
+                
+                // Add selection to clicked option
+                option.classList.add('selected');
+                selectedOption = option.dataset.value;
+                
+                // Enable submit button
+                submitBtn.classList.add('active');
+            });
+        });
+
+        submitBtn.addEventListener('click', () => {
+            if (selectedOption) {
+                // Hide question page
+                document.getElementById('questionPage').style.display = 'none';
+                
+                // Show results page
+                document.getElementById('resultsPage').style.display = 'block';
+            }
+        });
+
+        // CTA button functionality
+        document.getElementById('ctaButton').addEventListener('click', () => {
+            // Add ttclid to href if present
+            var ttclid = new URLSearchParams(window.location.search).get('ttclid');
+            if (ttclid) {
+                window.location.href = 'https://x.tokrwd.com/click?ttclid=' + ttclid;
+            } else {
+                window.location.href = 'https://x.tokrwd.com/click';
+            }
+        });
+
+        // Handle viewport height on mobile
+        function setViewportHeight() {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        window.addEventListener('resize', setViewportHeight);
+        window.addEventListener('load', setViewportHeight);
+    </script>
+</body>
+</html>
